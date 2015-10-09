@@ -34,8 +34,8 @@ def find_K_2stars(x):
 
 
 #Example of x and y vectors
-sample_vector = [-1.5, -1.00, -0.75, -0.40, -0.25, 0.00]
-sample_y = [-1.7, -1.2, -0.35, 0.1, 0.5, 0.75]
+sample_vector = [-2.0, -1.5, -1.00, -0.75, -0.40, -0.25, 0.00]
+sample_y = [-2.2, -1.7, -1.2, -0.35, 0.1, 0.5, 0.75]
 
 #Finding values of K matrices for new values of x
 K = find_K(sample_vector)
