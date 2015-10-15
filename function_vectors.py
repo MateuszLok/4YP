@@ -16,6 +16,22 @@ sample_vector = gp.get_x_values()
 sample_y = gp.get_y_values()
 new_x = np.array([0.2])
 
+"""matrix_A = np.array([[2.0,2.0]])
+matrix_B = sample_y
+
+C = np.multiply(matrix_A,matrix_B)
+
+print C
+
+D = C.tolist()
+print D
+
+print D[1][:]"""
+
+
+
+
+
 
 
 
@@ -68,18 +84,21 @@ for number in new_values:
     K_2stars_estimate = gp.find_K_2stars(number,sigma_f,sigma_n,length)
     X_estimate = np.dot(K_star_estimate,K_inv)
     # Without conversion to float we have a list of arrays
-    estimated_values_y.append(float((np.dot(X_estimate,sample_y))))
+    estimated_values_y.append((np.dot(X_estimate,sample_y).tolist()))
     K_star_trans_estimate = K_star_estimate.transpose()
-    estimated_variance_y.append((float(1.96*(K_2stars_estimate-np.dot(K_star_estimate,np.dot(K_inv,K_star_trans_estimate))**0.5))))
+    estimated_variance_y.append(((1.96*(K_2stars_estimate-np.dot(K_star_estimate,np.dot(K_inv,K_star_trans_estimate))**0.5))).tolist())
 
+new_estimated_values_y = []
+for number in range(0,len(estimated_values_y)):
+    new_estimated_values_y.append(estimated_values_y[number][0][0])
 
+new_estimated_variance_y = []
+for number in range(0,len(estimated_variance_y)):
+    new_estimated_variance_y.append(estimated_variance_y[number][0][0])
 
-
-
-
+print new_estimated_variance_y
 #Plotting estimated curve
-plt.plot(new_values,estimated_values_y)
-plt.errorbar(new_values,estimated_values_y, yerr=estimated_variance_y, capsize=0)
+plt.errorbar(new_values,new_estimated_values_y, yerr=new_estimated_variance_y, capsize=0)
 #Plotting one new value
 plt.plot(sample_vector, sample_y, 'ro')
 #plt.axis([min(sample_vector)-0.5, max(sample_vector)+0.5, min(sample_y)-0.5, max(sample_y)+0.5])
