@@ -20,10 +20,10 @@ new_x = np.array([0.2,1])
 
 #----Optimization part
 
-result = optimize.minimize(gp.function_to_minimize, [3,0.5,3])
+#result = optimize.minimize(gp.function_to_minimize, [3,0.5,3])
 
-wynik = result['x']
-print wynik
+#wynik = result['x']
+#print wynik
 """sigma_f = wynik[0]     1.935
 sigma_n = wynik[1]
 length = wynik[2]"""
@@ -31,6 +31,7 @@ length = wynik[2]"""
 sigma_f = 1.27
 sigma_n = 0.3
 length = 1
+print length
 
 
 #-------
@@ -39,6 +40,8 @@ length = 1
 K = gp.find_K(sample_x,sigma_f,sigma_n,length)
 K_star = gp.find_K_star(sample_x,new_x,sigma_f,sigma_n,length)
 K_2stars = gp.find_K_2stars(new_x,sigma_f,sigma_n,length)
+
+print K
 
 #Find y*
 K_inv = np.linalg.inv(K)
@@ -53,7 +56,7 @@ y_star_var = K_2stars-np.dot(K_star,np.dot(K_inv,K_star_trans))
 
 #----Vector of new x values
 #Define the x values for which y values are to be found
-new_values = np.arange(-2,0.5,0.001)
+new_values = np.arange(-3,2,0.02)
 estimated_values_y = []
 estimated_variance_y = []
 for number in new_values:
@@ -76,26 +79,64 @@ for number in range(0,len(estimated_variance_y)):
 
 sample_vector=sample_x.tolist()
 
-print sample_vector[2][1]
+
 #Convert input to 2 lists
 sample_vector_x1 = []
 sample_vector_x2 = []
 for number in range(0,len(sample_vector)):
     sample_vector_x1.append(sample_vector[number][0])
-print sample_vector_x1
 
 for number in range(0,len(sample_vector)):
     sample_vector_x2.append(sample_vector[number][1])
 
 
-ax = Axes3D(plt.gcf())
-ax.scatter(sample_vector_x1,sample_vector_x2,sample_y)
+sample_y = sample_y.transpose()[0]
+"""fig = plt.figure(dpi=100)
+ax = fig.add_subplot(111, projection='3d')
+#ax = Axes3D(plt.gcf())
+#ax.scatter(sample_vector_x1,sample_vector_x2,sample_y)
+
+ax.plot(sample_vector_x1,sample_vector_x2,sample_y, linestyle="None", marker="o")
+
 #Plotting estimated curve
-#plt.errorbar(new_values,new_estimated_values_y, yerr=new_estimated_variance_y, capsize=0)
-#Plotting one new value
-#plt.axis([min(sample_vector)-0.5, max(sample_vector)+0.5, min(sample_y)-0.5, max(sample_y)+0.5])
+ax.errorbar(sample_vector_x1,sample_vector_x2, yerr=0.3)
+print len(sample_vector)
+#plot errorbars
+xerror = 0.3
+for i in np.arange(0, len(sample_vector)):
+    ax.plot(sample_y[i]+xerror, sample_y[i]-xerror, [sample_vector_x1[i], sample_vector_x1[i]], [sample_vector_x2[i], sample_vector_x2[i]], marker="_")
 plt.axis([-1.7,0.4,-2.6,1.7])
-#plt.errorbar(sample_vector, sample_y, yerr=0.3, fmt='ro', capsize=0)
-#plt.plot([0.2],[y_star], 'go')
+
+plt.show()"""
+
+fig = plt.figure(dpi=100)
+ax = fig.add_subplot(111, projection='3d')
+
+
+#data
+fx = new_estimated_values_y
+fy = new_values
+fz = new_values
+
+#error data
+xerror = new_estimated_variance_y
+yerror = 0
+zerror = 0
+
+#plot points
+ax.plot(fx, fy, fz, linestyle="None")
+ax.plot(sample_y,sample_vector_x1,sample_vector_x2,'g', linestyle="None", marker="o")
+
+#plot errorbars
+for i in np.arange(0, len(fx)):
+    ax.plot([fx[i]+xerror[i], fx[i]-xerror[i]], [fy[i], fy[i]], [fz[i], fz[i]], 'r', alpha=0.2, marker="_",)
+
+
+#configure axes
+ax.set_xlim3d(-5, 5)
+ax.set_ylim3d(-5, 5)
+ax.set_zlim3d(-5, 5)
+
 plt.show()
+
 

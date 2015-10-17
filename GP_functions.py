@@ -18,11 +18,14 @@ def get_y_values():
     return np.array(([-1.7], [-1.25], [-0.35], [0.1], [0.5], [0.75]),dtype=float)"""
 
 
+
+
 def get_x_values():
-    return np.array(([-1.5,1],[-1.00,1],[-0.75,1],[-0.40,1],[-0.25,1],[0.0,1]),dtype=float)
+    return np.array(([-1.5,-1],[-1.00,-1.2],[-0.75,-0],[-0.40,0.5],[-0.25,-0.25],[0.0,-1.0]),dtype=float)
 
 def get_y_values():
-    return np.array(([-1.7], [-1.25], [-0.35], [0.1], [0.5], [0.75]),dtype=float)
+    return np.array(([-1.5], [-1.25], [-0.35], [0.1], [0.5], [0.75]),dtype=float)
+
 
 
 
