@@ -3,6 +3,7 @@ __author__ = 'Mat'
 from math import exp
 import numpy as np
 from math import log10
+from math import fabs
 
 #Define input data
 """def get_x_values():
@@ -42,7 +43,7 @@ def calculate_kk(x1,x2,f,n,ll):
         return (sigma_f ** 2) * exp(-(x1-x2) ** 2 * (2 * l ** 2) ** -1 )
 
 #Vector format
-def calculate_k(x1,x2,f,n,ll):
+def calculate_kk(x1,x2,f,n,ll):
     sigma_f = f
     sigma_n = n
     l=ll
@@ -53,6 +54,16 @@ def calculate_k(x1,x2,f,n,ll):
     else:
         return (sigma_f ** 2) * exp(intermediate)
 
+def calculate_k(x1,x2,f,n,ll):
+    sigma_f = f
+    sigma_n = n
+    l=ll
+    difference = x1-x2
+    intermediate = -0.5*np.dot(np.dot(difference.transpose(),np.linalg.inv(l)),difference)
+    if (x1==x2).all():
+        return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
+    else:
+        return (sigma_f ** 2) * exp(intermediate)
 
 #Evaluates matrix K - covariance matrix
 #Vector format
@@ -118,3 +129,15 @@ def function_to_minimize(input_data):
     sample_y_opt = np.array(get_y_values())
     sample_y_trans_opt = sample_y_opt.transpose()
     return 0.5 * np.dot(sample_y_trans_opt, np.dot(np.linalg.inv(find_K(vector_x,f,n,l)), sample_y_opt)) +0.5 * log10(np.linalg.det(find_K(vector_x,f,n,l))) + log10(6.28)
+
+def function_to_minimize_3d(input_data):
+    f = input_data[0]
+    n = input_data[1]
+    l1= input_data[2]
+    l2 = input_data[3]
+    l = np.array(([l1,0],[0,l2]),dtype=float)
+
+    vector_x= get_x_values()
+    sample_y_opt = np.array(get_y_values())
+    sample_y_trans_opt = sample_y_opt.transpose()
+    return 0.5 * np.dot(sample_y_trans_opt, np.dot(np.linalg.inv(find_K(vector_x,f,n,l)), sample_y_opt)) +0.5 * log10(fabs(np.linalg.det(find_K(vector_x,f,n,l)))) + log10(6.28)

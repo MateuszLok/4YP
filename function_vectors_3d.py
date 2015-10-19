@@ -20,18 +20,17 @@ new_x = np.array([0.2,1])
 
 #----Optimization part
 
-#result = optimize.minimize(gp.function_to_minimize, [3,0.5,3])
+result = optimize.minimize(gp.function_to_minimize_3d, [2.0,0.5,3.0,2.0])
 
-#wynik = result['x']
-#print wynik
-"""sigma_f = wynik[0]     1.935
+wynik = result['x']
+print wynik
+sigma_f = wynik[0]
 sigma_n = wynik[1]
-length = wynik[2]"""
+length = np.array(([wynik[2],0],[0,wynik[3]]),dtype=float)
 
-sigma_f = 1.27
+"""sigma_f = 1.27
 sigma_n = 0.3
-length = 1
-print length
+length = np.array(([1,0],[0,2]),dtype=float)"""
 
 
 #-------
@@ -41,7 +40,7 @@ K = gp.find_K(sample_x,sigma_f,sigma_n,length)
 K_star = gp.find_K_star(sample_x,new_x,sigma_f,sigma_n,length)
 K_2stars = gp.find_K_2stars(new_x,sigma_f,sigma_n,length)
 
-print K
+
 
 #Find y*
 K_inv = np.linalg.inv(K)
@@ -56,7 +55,7 @@ y_star_var = K_2stars-np.dot(K_star,np.dot(K_inv,K_star_trans))
 
 #----Vector of new x values
 #Define the x values for which y values are to be found
-new_values = np.arange(-2.5,1.5,0.2)
+new_values = np.arange(-3,2,0.2)
 estimated_values_y = []
 estimated_variance_y = []
 for number in new_values:
