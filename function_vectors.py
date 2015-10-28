@@ -12,8 +12,8 @@ import GP_functions as gp
 
 
 #Example of x and y vectors
-sample_vector = gp.get_x_values()
-sample_y = gp.get_y_values()
+sample_vector = gp.get_x_values_2d()
+sample_y = gp.get_y_values_2d()
 new_x = np.array([0.2])
 
 """matrix_A = np.array([[2.0,2.0]])
@@ -48,7 +48,7 @@ length = wynik[2]"""
 
 sigma_f = 1.27
 sigma_n = 0.3
-length = 1
+length = 0.3
 
 
 
