@@ -80,7 +80,7 @@ for number in range(len(new_values)):
         K_star_trans_estimate = K_star_estimate.transpose()
         #Add new value of variance to the list
         estimated_variance_y.append(((1.96*(K_2stars_estimate-np.dot(K_star_estimate,np.dot(K_inv,K_star_trans_estimate)\
-                                                                     )**0.5))).tolist())
+                                                                     ))**0.5)).tolist())
 
 
 

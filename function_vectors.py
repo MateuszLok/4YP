@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import GP_functions as gp
+from pyDOE import lhs
 
 # ----------------------------------------------------------------------------
 
@@ -16,39 +17,31 @@ sample_vector = gp.get_x_values_2d()
 sample_y = gp.get_y_values_2d()
 new_x = np.array([0.2])
 
-"""matrix_A = np.array([[2.0,2.0]])
-matrix_B = sample_y
-
-C = np.multiply(matrix_A,matrix_B)
-
-print C
-
-D = C.tolist()
-print D
-
-print D[1][:]"""
-
-
-
-
-
-
-
-
+latin_hypercube_values = lhs(3, samples=100)
+latin_hypercube_values=latin_hypercube_values*10
+print latin_hypercube_values
 
 #Optimization part
+result=np.zeros((len(latin_hypercube_values),3))
+for number in range(0,len(latin_hypercube_values)):
+    wynik= optimize.minimize(gp.function_to_minimize, latin_hypercube_values[number],method='BFGS')
+    result[number]=wynik['x']
 
-#result = optimize.minimize(gp.function_to_minimize, [3,0.5,3])
+likelihood=np.zeros((len(latin_hypercube_values),1))
+for number in range(0,len(latin_hypercube_values)):
+    likelihood[number] = gp.function_to_minimize(result[number])
+min_index = np.argmin(likelihood)
+print likelihood
+print min_index
+print result
+print result[min_index]
+sigma_f = result[min_index][0]
+sigma_n = result[min_index][1]
+length = result[min_index][2]
 
-#wynik = result['x']
-#print wynik
-"""sigma_f = wynik[0]     1.935
-sigma_n = wynik[1]
-length = wynik[2]"""
-
-sigma_f = 1.27
+"""sigma_f = 1.27
 sigma_n = 0
-length = 0.3
+length = 0.3"""
 
 
 
@@ -65,13 +58,6 @@ y_star = np.dot(X, sample_y)
 #Find variance of y*
 K_star_trans = K_star.transpose()
 y_star_var = K_2stars-np.dot(K_star,np.dot(K_inv,K_star_trans))
-
-
-#--------------------------------
-
-
-
-
 
 #--------------------------------
 
