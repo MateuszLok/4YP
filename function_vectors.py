@@ -47,7 +47,7 @@ sigma_n = wynik[1]
 length = wynik[2]"""
 
 sigma_f = 1.27
-sigma_n = 0.3
+sigma_n = 0
 length = 0.3
 
 
@@ -76,7 +76,7 @@ y_star_var = K_2stars-np.dot(K_star,np.dot(K_inv,K_star_trans))
 #--------------------------------
 
 #Vector of new x values
-new_values = np.arange(-2,0.5,0.001)
+new_values = np.arange(-5,5,0.001)
 estimated_values_y = []
 estimated_variance_y = []
 for number in new_values:
@@ -86,7 +86,7 @@ for number in new_values:
     # Without conversion to float we have a list of arrays
     estimated_values_y.append((np.dot(X_estimate,sample_y).tolist()))
     K_star_trans_estimate = K_star_estimate.transpose()
-    estimated_variance_y.append(((1.96*(K_2stars_estimate-np.dot(K_star_estimate,np.dot(K_inv,K_star_trans_estimate))**0.5))).tolist())
+    estimated_variance_y.append(((1.96*(K_2stars_estimate-np.dot(K_star_estimate,np.dot(K_inv,K_star_trans_estimate)))**0.5)).tolist())
 
 new_estimated_values_y = []
 for number in range(0,len(estimated_values_y)):
@@ -96,13 +96,12 @@ new_estimated_variance_y = []
 for number in range(0,len(estimated_variance_y)):
     new_estimated_variance_y.append(estimated_variance_y[number][0][0])
 
-print new_estimated_variance_y
 #Plotting estimated curve
 plt.errorbar(new_values,new_estimated_values_y, yerr=new_estimated_variance_y, capsize=0)
 #Plotting one new value
 plt.plot(sample_vector, sample_y, 'ro')
 #plt.axis([min(sample_vector)-0.5, max(sample_vector)+0.5, min(sample_y)-0.5, max(sample_y)+0.5])
-plt.axis([-1.7,0.4,-2.6,1.7])
+plt.axis([-5,5,-5,5])
 #plt.errorbar(sample_vector, sample_y, yerr=0.3, fmt='ro', capsize=0)
 #plt.plot([0.2],[y_star], 'go')
 plt.show()

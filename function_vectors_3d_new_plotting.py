@@ -1,4 +1,5 @@
 __author__ = 'Mat'
+__author__ = 'Mat'
 
 
 from math import exp
@@ -10,6 +11,7 @@ import GP_functions as gp
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from pyDOE import lhs
 
 # ----------------------------------------------------------------------------
 
@@ -21,8 +23,11 @@ sample_y = gp.get_y_values_3d()
 new_x = np.array([0.2,1])
 
 #----Optimization part
+
+#Get hypercube parameters:
+print lhs(4,samples=10)
 #result stores the result op optimization on function to minimie in 3d, with starting location given
-result = optimize.minimize(gp.function_to_minimize_3d, [2.0,0.5,3.0,2.0])
+result = optimize.minimize(gp.function_to_minimize_3d, [3.0,1.5,2.0,1])
 
 #We're only interested in the final value of x, whereas results stores also other info
 wynik = result['x']
@@ -59,41 +64,33 @@ y_star_var = K_2stars-np.dot(K_star,np.dot(K_inv,K_star_trans))
 
 #----Vector of new x values
 #Define the x values for which y values are to be found
-new_values = np.arange(-3,2,0.2)
+new_values = np.arange(-3,3,0.15)
 
 #Initialise lists for values and variance
 estimated_values_y = []
 estimated_variance_y = []
-for number in new_values:
-    for number2 in new_values:
+for number in range(len(new_values)):
+    for number2 in range(len(new_values)):
         #Equations from the the first article (that was sent in September)
-        K_star_estimate = gp.find_K_star(sample_x,np.array([number,number2]),sigma_f,sigma_n,length)
-        K_2stars_estimate = gp.find_K_2stars(np.array([number,number2]),sigma_f,sigma_n,length)
+        K_star_estimate = gp.find_K_star(sample_x,np.array([new_values[number],new_values[number2]]),sigma_f,sigma_n,length)
+        K_2stars_estimate = gp.find_K_2stars(np.array([new_values[number],new_values[number2]]),sigma_f,sigma_n,length)
         X_estimate = np.dot(K_star_estimate,K_inv)
         #Add new value of y to the list
-        estimated_values_y.append((np.dot(X_estimate,sample_y).tolist()))
+        estimated_values_y.append(((np.dot(X_estimate,sample_y).tolist())))
         K_star_trans_estimate = K_star_estimate.transpose()
         #Add new value of variance to the list
         estimated_variance_y.append(((1.96*(K_2stars_estimate-np.dot(K_star_estimate,np.dot(K_inv,K_star_trans_estimate)\
                                                                      )**0.5))).tolist())
 
-#Creates a mesh of new values (in 2D), so that they new values of y can be plotted for each x1 and x2
-new_new_values1 = []
+
+
+new_estimated_values_y = np.zeros((len(new_values),len(new_values)))
+var = 0
 for number in range(0,len(new_values)):
     for number2 in range(0,len(new_values)):
-        new_new_values1.append(new_values[number])
+        new_estimated_values_y[number][number2]=(estimated_values_y[var][0][0])
+        var+=1
 
-#Finds corresponding value of x2, so that the mesh is complete
-new_new_values2 = []
-for number in range(0,len(new_values)):
-    for number2 in range(0,len(new_values)):
-        new_new_values2.append(new_values[number2])
-
-
-
-new_estimated_values_y = []
-for number in range(0,len(estimated_values_y)):
-    new_estimated_values_y.append(estimated_values_y[number][0][0])
 
 new_estimated_variance_y = []
 for number in range(0,len(estimated_variance_y)):
@@ -114,37 +111,24 @@ for number in range(0,len(sample_vector)):
 
 
 
-fig = plt.figure(dpi=100)
-ax = fig.add_subplot(111, projection='3d')
 
 
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+X, Y = np.meshgrid(new_values,new_values)
+surf = ax.plot_surface(Y, X, new_estimated_values_y, rstride=1, cstride=1, cmap='Blues',
+        linewidth=0, antialiased=True, shade=0)
+ax.set_zlim(-1.01, 1.01)
 
-#data
-fx = new_estimated_values_y
-fy = new_new_values1
-fz = new_new_values2
-#error data
-xerror = new_estimated_variance_y
-yerror = 0
-zerror = 0
+ax.zaxis.set_major_locator(LinearLocator(10))
+ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
 
-#plot points
-ax.plot(fx, fy, fz, linestyle="None")
-ax.plot(sample_y,sample_vector_x1,sample_vector_x2,'g', linestyle="None", marker="o")
+fig.colorbar(surf, shrink=0.5, aspect=5)
+ax.scatter(sample_vector_x1,sample_vector_x2,sample_y)
 
-#plot errorbars
-for i in np.arange(0, len(fx)):
-    ax.plot([fx[i]+xerror[i], fx[i]-xerror[i]], [fy[i], fy[i]], [fz[i], fz[i]], 'r', alpha=0.2, marker="_",)
-
-
-
-
-#configure axes
 ax.set_xlim3d(-5, 5)
 ax.set_ylim3d(-5, 5)
-ax.set_zlim3d(-5, 5)
-
+ax.set_zlim3d(-2, 1)
 
 
 plt.show()
-
