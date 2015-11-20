@@ -115,7 +115,6 @@ def find_K_2stars(x,sigma_f,sigma_n,l):
 #Function to optimize
 def function_to_minimize(input_data):
     #print len(input_data)
-    print input_data
     if len(input_data)!=1:
         #print input_data
         f = input_data[0]
@@ -130,8 +129,11 @@ def function_to_minimize(input_data):
     vector_x= get_x_values_2d()
     sample_y_opt = np.array(get_y_values_2d())
     sample_y_trans_opt = sample_y_opt.transpose()
-    return (0.5 * np.dot(sample_y_trans_opt, np.dot(np.linalg.inv(find_K(vector_x,f,n,l)), sample_y_opt)) +0.5 * \
-            log10(np.linalg.det(find_K(vector_x,f,n,l))) + log10(6.28))[0]
+    chol=np.linalg.cholesky(find_K(vector_x,f,n,l))
+    transient = 2*cholesky_det(chol)
+    chol_trans = chol.transpose()
+    K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
+    return (0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28))[0]
 
 def function_to_minimize_3d(input_data):
     f = input_data[0]
@@ -149,18 +151,44 @@ def function_to_minimize_3d(input_data):
 def function_to_minimize_volatility(input_data):
     if len(input_data)!=1:
         f = input_data[0]
-        n = input_data[1]
-        l = input_data[2]
+        n = input_data[2]
+        l = input_data[1]
     else:
         f = input_data[0][0]
-        n = input_data[0][1]
-        l = input_data[0][2]
+        n = input_data[0][2]
+        l = input_data[0][1]
 
     vector_x= get_time_vector(get_volatility())
     sample_y_opt = np.array(get_volatility())
     sample_y_trans_opt = sample_y_opt.transpose()
-    transient = fabs(np.linalg.det(find_K(vector_x,f,n,l)))
-    if transient == 0:
-        transient = 3.64e-164
-    return (0.5 * np.dot(sample_y_trans_opt, np.dot(np.linalg.inv(find_K(vector_x,f,n,l)), sample_y_opt)) +0.5 * \
-            log10(transient) + log10(6.28))
+    chol=np.linalg.cholesky(find_K(vector_x,f,n,l))
+    transient = 2*cholesky_det(chol)
+    chol_trans = chol.transpose()
+    K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
+    return (0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28))
+
+def function_to_minimize_volatility_nonoise(input_data):
+    if len(input_data)!=1:
+        f = input_data[0]
+        l = input_data[1]
+        n=0.0001
+    else:
+        f = input_data[0][0]
+        l = input_data[0][1]
+        n=0.0001
+
+    vector_x= get_time_vector(get_volatility())
+    sample_y_opt = np.array(get_volatility())
+    sample_y_trans_opt = sample_y_opt.transpose()
+    chol=np.linalg.cholesky(find_K(vector_x,f,n,l))
+    transient = 2*cholesky_det(chol)
+    chol_trans = chol.transpose()
+    K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
+    return (0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28))
+
+def cholesky_det(R):
+    sum=0
+    for number in range(0,len(R)):
+        sum=sum+log10(R[number,number])
+    return sum
+

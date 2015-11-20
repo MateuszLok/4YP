@@ -78,8 +78,8 @@ pl.fill(np.concatenate([x, x[::-1]]),
         alpha=.5, fc='b', ec='None', label='95% confidence interval')
 pl.xlabel('$x$')
 pl.ylabel('$f(x)$')
-pl.ylim(-2, 2)
-pl.xlim(-3,2)
+pl.ylim(-4, 4)
+pl.xlim(-4,4)
 pl.legend(loc='upper left')
 
 #----------------------------------------------------------------------
@@ -115,14 +115,17 @@ sigma = np.sqrt(MSE)
 fig = pl.figure()
 pl.errorbar(X.ravel(), y, dy, fmt='r.', markersize=10, label=u'Observations')
 pl.plot(x, y_pred, 'b-', label=u'Prediction')
+print x
+print 'lol'
+print x[::-1]
 pl.fill(np.concatenate([x, x[::-1]]),
         np.concatenate([y_pred - 1.9600 * sigma,
                        (y_pred + 1.9600 * sigma)[::-1]]),
         alpha=.5, fc='b', ec='None', label='95% confidence interval')
 pl.xlabel('$x$')
 pl.ylabel('$f(x)$')
-pl.ylim(-2, 2)
-pl.xlim(-3,2)
+pl.ylim(-4, 4)
+pl.xlim(-4,4)
 pl.legend(loc='upper left')
 
 pl.show()
