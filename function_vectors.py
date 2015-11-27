@@ -6,7 +6,7 @@ from math import log10
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as optimize
-import GP_functions as gp
+import GP_functions_2 as gp
 from pyDOE import lhs
 from math import fabs
 
@@ -18,12 +18,13 @@ sample_vector = gp.get_x_values_2d()
 sample_y = gp.get_y_values_2d()
 new_x = np.array([0.2])
 print 'Starting...'
-latin_hypercube_values = lhs(3, samples=20)
+latin_hypercube_values = lhs(3, samples=10)
 latin_hypercube_values=latin_hypercube_values
 
 #Optimization part
 result=np.zeros((len(latin_hypercube_values),3))
 for number in range(0,len(latin_hypercube_values)):
+    print number
     wynik= optimize.minimize(gp.function_to_minimize, latin_hypercube_values[number],method='BFGS')
     result[number]=wynik['x']
 
@@ -31,21 +32,16 @@ likelihood=np.zeros((len(latin_hypercube_values),1))
 for number in range(0,len(latin_hypercube_values)):
     likelihood[number] = gp.function_to_minimize(result[number])
 min_index = np.argmin(likelihood)
-print result[min_index]
-sigma_f = result[min_index][0]
-sigma_n = result[min_index][1]
-length = result[min_index][2]
+#Order of hyperparameters f,l,n
+hyperparameters = result[min_index]
 
-"""sigma_f = 1.27
-sigma_n = 0.3
-length = 1"""
 
 
 
 #Finding values of K matrices for new values of x
-K = gp.find_K(sample_vector,sigma_f,sigma_n,length)
-K_star = gp.find_K_star(sample_vector,new_x,sigma_f,sigma_n,length)
-K_2stars = gp.find_K_2stars(new_x,sigma_f,sigma_n,length)
+K = gp.find_K(sample_vector,hyperparameters)
+K_star = gp.find_K_star(sample_vector,new_x,hyperparameters)
+K_2stars = gp.find_K_2stars(new_x,hyperparameters)
 
 #Find y*
 K_inv = np.linalg.inv(K)
@@ -62,10 +58,10 @@ y_star_var = K_2stars-np.dot(K_star,np.dot(K_inv,K_star_trans))
 new_values = np.arange(-5,5,0.001)
 estimated_values_y = []
 estimated_variance_y = []
-K_2stars_estimate = gp.find_K_2stars(new_values[1],sigma_f,sigma_n,length)
+K_2stars_estimate = gp.find_K_2stars(new_values[1],hyperparameters)
 estimated_variance_size = 0
 for number in new_values:
-    K_star_estimate = gp.find_K_star(sample_vector,number,sigma_f,sigma_n,length)
+    K_star_estimate = gp.find_K_star(sample_vector,number,hyperparameters)
     X_estimate = np.dot(K_star_estimate,K_inv)
     # Without conversion to float we have a list of arrays
     estimated_values_y.append((np.dot(X_estimate,sample_y).tolist()))
