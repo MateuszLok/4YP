@@ -7,7 +7,7 @@ from math import fabs
 
 # ----------------------------------------------------------------------------
 #Data input
-volatility_observed = gp.get_volatility(96)
+volatility_observed = gp.get_volatility(90)
 time_vector = gp.get_time_vector(volatility_observed)
 print time_vector
 print volatility_observed
@@ -16,14 +16,14 @@ new_x = np.array([0.2])
 
 #Latin Hypercube Initlialziation
 print 'Starting...'
-latin_hypercube_values = lhs(5, samples=2)
+latin_hypercube_values = lhs(2, samples=1)
 latin_hypercube_values=latin_hypercube_values*5
 
 #Optimization part
-result=np.zeros((len(latin_hypercube_values),5))
+result=np.zeros((len(latin_hypercube_values),2))
 for number in range(0,len(latin_hypercube_values)):
     print number
-    wynik= optimize.minimize(gp.function_to_minimize_volatility, latin_hypercube_values[number],method='BFGS')
+    wynik= optimize.minimize(gp.function_to_minimize_volatility, latin_hypercube_values[number],method='BFGS', jac=gp.jacobian_of_likelihood)
     result[number]=wynik['x']
 
 likelihood=np.zeros((len(latin_hypercube_values),1))
@@ -39,8 +39,8 @@ hyperparameters = result[min_index]
 
 
 #Finding values of K matrices for new values of x
-K = gp.find_K(time_vector,hyperparameters)
-K_2stars_estimate = gp.find_K_2stars(new_x,hyperparameters)
+K = gp.find_K(time_vector,hyperparameters,'normal')
+K_2stars_estimate = gp.find_K_2stars(new_x,hyperparameters,'normal')
 K_inv = np.linalg.inv(K)
 
 #--------------------------------
@@ -57,7 +57,7 @@ estimated_variance_size = 0
 
 #Find y and variance for all 'new values'
 for number in new_values:
-    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters)
+    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal')
     X_estimate = np.dot(K_star_estimate,K_inv)
     estimated_values_y.append((np.dot(X_estimate,volatility_observed).tolist()))
     K_star_trans_estimate = K_star_estimate.transpose()

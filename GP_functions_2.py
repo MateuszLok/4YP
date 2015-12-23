@@ -30,29 +30,6 @@ def get_volatility(x):
 def get_time_vector(x):
     return np.array((range(0,len(x),1)))
 
-
-#Define sample input vectors
-def get_x_values_2d():
-    return np.array(([-1.5],[-1.49],[-1.00],[-0.75],[-0.40],[-0.25],[-0.24],[0.0],[0.1]),dtype=float)
-
-def get_y_values_2d():
-    return np.array(([-1.7], [-1.69], [-1.25], [-0.35], [0.1], [0.5],[0.51], [0.75],[0.82]),dtype=float)
-
-
-def get_x_values_3d():
-    return np.array(([-1.5,-1],[-1.00,-1],[-0.75,-1],[-0.40,-1],[-0.25,-1],[0.0,-1.0]),dtype=float)
-
-def get_y_values_3d():
-    return np.array(([-1.5], [-1.25], [-0.35], [0.1], [0.5], [0.75]),dtype=float)
-
-def get_x_values_4d():
-    return np.array(([-1.5,-1,1],[-1.00,-1.2,1],[-0.75,-0,1],[-0.40,0.5,1],[-0.25,-0.25,1],[0.0,-1.0,1]),dtype=float)
-
-def get_y_values_4d():
-    return np.array(([-1.5], [-1.25], [-0.35], [0.1], [0.5], [0.75]),dtype=float)
-
-
-
 #Calculate covariance for two values
 def calculate_kk(x1,x2,theta):
     difference = x1-x2
@@ -76,6 +53,8 @@ def calculate_kk(x1,x2,theta):
             return (sigma_f ** 2) * exp(intermediate)
 
 #Not squared
+
+
 def calculate_kk(x1,x2,theta):
     difference = x1-x2
     #print sigma_n
@@ -88,14 +67,45 @@ def calculate_kk(x1,x2,theta):
     else:
         return (sigma_f ** 2) * exp(intermediate)
 
+#Simple case for testing derivative
+def calculate_k(x1,x2,theta,type):
+    if type=="normal":
+        difference = x1-x2
+        #print sigma_n
+        l=exp(theta[0])
+        sigma_f=exp(theta[1])
+        sigma_n=0.001
+        intermediate = -fabs(difference) * (l **-1)
+        if (x1==x2).all():
+            return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
+        else:
+            return (sigma_f ** 2) * exp(intermediate)
+    elif type=="der_l":
+        difference = x1-x2
+        #print sigma_n
+        l=exp(theta[0])
+        sigma_f=exp(theta[1])
+        sigma_n=0.001
+        intermediate = -fabs(difference) * (l **-1)
+        return (sigma_f ** 2) *fabs(difference)*(l)**-2 * exp(intermediate)
+    elif type=="der_f":
+        difference = x1-x2
+        #print sigma_n
+        l=exp(theta[0])
+        sigma_f=exp(theta[1])
+        sigma_n=0.001
+        intermediate = -fabs(difference) * (l **-1)
+        return 2*sigma_f*exp(intermediate)
+
+
 #As in the paper
-def calculate_k(x1,x2,theta):
+def calculate_kk(x1,x2,theta):
     difference = x1-x2
     l1=exp(theta[1])
     sigma_f1=exp(theta[0])
     l2=exp(theta[2])
-    sigma_f2=(theta[3])
-    sigma_n=theta([4])
+    sigma_f2=exp(theta[3])
+    sigma_n=exp(theta[4])
     intermediate1 = -fabs(difference) * (l1 **-1)
     intermediate2 = -fabs(difference) * (l2 **-1)
 
@@ -107,70 +117,69 @@ def calculate_k(x1,x2,theta):
 
 #Evaluates matrix K - covariance matrix
 #Vector format
-def find_K(vector_X, theta):
+def find_K(vector_X, theta,type):
     outcome = np.zeros((len(vector_X),len(vector_X)))
     for i in range(0, len(vector_X)):
         for j in range(i,len(vector_X)):
-            temp = (calculate_k(vector_X[i],vector_X[j],theta))
+            temp = (calculate_k(vector_X[i],vector_X[j],theta,type))
             outcome[i][j] = temp
             outcome[j][i] = temp
 
     return outcome
 
+
 #Evaluates matrix K*
-def find_K_star(vector,x,theta):
+def find_K_star(vector,x,theta,type):
     outcome = np.zeros((1, len(vector)))
     for i in range(0,len(vector)):
-        outcome[0][i] = calculate_k(x,vector[i],theta)
+        outcome[0][i] = calculate_k(x,vector[i],theta,type)
     return outcome
 
 #Evaluates matrix K**
-def find_K_2stars(x,theta):
-    return calculate_k(x,x,theta)
+def find_K_2stars(x,theta,type):
+    return calculate_k(x,x,theta,type)
 
 #Function to optimize
-def function_to_minimize(input_data):
-    vector_x= get_x_values_2d()
-    sample_y_opt = np.array(get_y_values_2d())
-    sample_y_trans_opt = sample_y_opt.transpose()
-    chol=np.linalg.cholesky(find_K(vector_x,input_data))
-    transient = 2*cholesky_det(chol)
-    chol_trans = chol.transpose()
-    K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
-    return (0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28))[0]
-
 def function_to_minimize_volatility(input_data):
-    vector_x= get_time_vector(get_volatility(96))
-    sample_y_opt = np.array(get_volatility(96))
+    vector_x= get_time_vector(get_volatility(90))
+    sample_y_opt = np.array(get_volatility(90))
     sample_y_trans_opt = sample_y_opt.transpose()
-    chol=np.linalg.cholesky(find_K(vector_x,input_data))
+    chol=np.linalg.cholesky(find_K(vector_x,input_data,'normal'))
     transient = 2*cholesky_det(chol)
     chol_trans = chol.transpose()
     K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
     return (0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28))
 
-def function_to_minimize_volatility_nonoise(input_data):
-    if len(input_data)!=1:
-        f = input_data[0]
-        l = input_data[1]
-        n=0.0001
-    else:
-        f = input_data[0][0]
-        l = input_data[0][1]
-        n=0.0001
-
-    vector_x= get_time_vector(get_volatility())
-    sample_y_opt = np.array(get_volatility())
-    sample_y_trans_opt = sample_y_opt.transpose()
-    chol=np.linalg.cholesky(find_K(vector_x,f,n,l))
-    transient = 2*cholesky_det(chol)
-    chol_trans = chol.transpose()
-    K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
-    return (0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28))
 
 def cholesky_det(R):
     sum=0
     for number in range(0,len(R)):
         sum=sum+log10(R[number,number])
     return sum
+
+
+def K_inverse_function(input_data,l):
+    vector_x= get_time_vector(get_volatility(l))
+    sample_y_opt = np.array(get_volatility(l))
+    sample_y_trans_opt = sample_y_opt.transpose()
+    chol=np.linalg.cholesky(find_K(vector_x,input_data,'normal'))
+    transient = 2*cholesky_det(chol)
+    chol_trans = chol.transpose()
+    K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
+    return K_inverse
+
+def jacobian_of_likelihood(input_data):
+    length=90
+    vector_x= get_time_vector(get_volatility(length))
+    K_inv = K_inverse_function(input_data,length)
+    sample_y_opt = np.array(get_volatility(length))
+    sample_y_trans_opt = sample_y_opt.transpose()
+    ytKinv=np.dot(sample_y_trans_opt,K_inv)
+    Kinvy=np.dot(K_inv,sample_y_opt)
+    Kf=find_K(vector_x,input_data,'der_f')
+    Kl=find_K(vector_x,input_data,'der_l')
+    Kf=-0.5*np.dot(ytKinv,np.dot(Kf,Kinvy))+0.5*np.trace(np.dot(K_inv,Kf))
+    Kl=-0.5*np.dot(ytKinv,np.dot(Kl,Kinvy))+0.5*np.trace(np.dot(K_inv,Kl))
+    return np.array([Kl,Kf])
+
 
