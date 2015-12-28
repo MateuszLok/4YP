@@ -7,28 +7,36 @@ from math import fabs
 
 # ----------------------------------------------------------------------------
 #Data input
-volatility_observed = gp.get_volatility(90)
+sample_size = 100
+volatility_observed = gp.get_volatility(sample_size)
 time_vector = gp.get_time_vector(volatility_observed)
 print time_vector
 print volatility_observed
 new_x = np.array([0.2])
 
+average=sum(volatility_observed)/len(volatility_observed)
+print average
+for index in range(0,len(volatility_observed)):
+    volatility_observed[index]-=average
+
+print volatility_observed
+
 
 #Latin Hypercube Initlialziation
 print 'Starting...'
-latin_hypercube_values = lhs(2, samples=1)
+latin_hypercube_values = lhs(2, samples=3)
 latin_hypercube_values=latin_hypercube_values*5
 
 #Optimization part
 result=np.zeros((len(latin_hypercube_values),2))
 for number in range(0,len(latin_hypercube_values)):
     print number
-    wynik= optimize.minimize(gp.function_to_minimize_volatility, latin_hypercube_values[number],method='BFGS', jac=gp.jacobian_of_likelihood)
+    wynik= optimize.minimize(gp.function_to_minimize_volatility, latin_hypercube_values[number], args=(sample_size,), method='BFGS')
     result[number]=wynik['x']
 
 likelihood=np.zeros((len(latin_hypercube_values),1))
 for number in range(0,len(latin_hypercube_values)):
-    likelihood[number] = gp.function_to_minimize_volatility(result[number])
+    likelihood[number] = gp.function_to_minimize_volatility(result[number],sample_size)
 min_index = np.argmin(likelihood)
 print likelihood
 print min_index
@@ -46,7 +54,7 @@ K_inv = np.linalg.inv(K)
 #--------------------------------
 
 #Vector of new x values
-new_values = np.arange(0,300,0.201)
+new_values = np.arange(0,500,0.201)
 
 #Initialise matrices to store estimated values of y(volatility) and variance
 estimated_values_y = []
@@ -76,19 +84,68 @@ new_estimated_variance_y = estimated_variance_y
 
 new_estimated_variance_y_1 = []
 new_estimated_variance_y_2 = []
-print new_estimated_variance_y
 for number in range(0,len(new_estimated_variance_y)):
     new_estimated_variance_y_1.append(new_estimated_values_y[number]+new_estimated_variance_y[number])
     new_estimated_variance_y_2.append(new_estimated_values_y[number]-new_estimated_variance_y[number])
-print new_estimated_variance_y_1
-print new_estimated_variance_y_2
+
+
+
+
 
 #Plotting one new value
 plt.fill_between(new_values, new_estimated_variance_y_2,new_estimated_variance_y_1,alpha=0.5)
 plt.plot(new_values,new_estimated_values_y, 'g-')
 plt.plot(time_vector, volatility_observed, 'r.', markersize = 5)
-plt.plot(gp.get_time_vector(gp.get_volatility('all')), gp.get_volatility('all'), 'r.', markersize = 5)
+#plt.plot(gp.get_time_vector(gp.get_volatility('all')), gp.get_volatility('all'), 'r.', markersize = 5)
 #plt.axis([min(sample_vector)-0.5, max(sample_vector)+0.5, min(sample_y)-0.5, max(sample_y)+0.5])
-plt.axis([0,len(time_vector)+50,-3,-1])
+plt.axis([0,len(time_vector)+50,-0.5,0.5])
+
+
+#Error calculation
+forecast_period = 100
+forecast_volatility = gp.get_volatility(sample_size+forecast_period)
+print len(forecast_volatility)
+
+forecast_values = np.arange(sample_size,sample_size+forecast_period,1)
+
+#Initialise matrices to store estimated values of y(volatility) and variance
+estimated_values_y_forecast = []
+
+#Find y and variance for all 'new values'
+for number in forecast_values:
+    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal')
+    X_estimate = np.dot(K_star_estimate,K_inv)
+    estimated_values_y_forecast.append((np.dot(X_estimate,volatility_observed).tolist()))
+
+new_estimated_values_y_forecast = []
+for number in range(0,len(estimated_values_y_forecast)):
+    new_estimated_values_y_forecast.append(estimated_values_y_forecast[number][0])
+
+print new_estimated_values_y_forecast
+
+print len(new_estimated_values_y_forecast)
+
+for index in range(0,len(forecast_volatility)):
+    forecast_volatility[index]-=average
+
+sum_errors = 0
+
+x=sample_size+forecast_period
+
+for index in range(sample_size,sample_size+forecast_period):
+    sum_errors+=fabs(forecast_volatility[index]-new_estimated_values_y_forecast[index-sample_size])**2
+
+error = sum_errors/forecast_period
+
+print error
+
+
+
+
 plt.show()
+
+
+
+
+
 

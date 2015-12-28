@@ -30,27 +30,19 @@ def get_volatility(x):
 def get_time_vector(x):
     return np.array((range(0,len(x),1)))
 
+#------------------------------------------------------------------------------
+
 #Calculate covariance for two values
 def calculate_kk(x1,x2,theta):
     difference = x1-x2
     l=exp(theta[1])
     sigma_f=exp(theta[0])
     sigma_n=exp(theta[2])
-#3D
-    if x1.shape == (2,):
-        intermediate = -0.5*np.dot(np.dot(difference.transpose(),np.linalg.inv(l)),difference)
-        #Compares if all entries in each vector are the same, hence whether the vectors are equal
-        if (x1==x2).all():
-            return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
-        else:
-            return (sigma_f ** 2) * exp(intermediate)
-#2D
+    intermediate = -np.dot(difference.transpose(),difference) * (2 * l ** 2) ** -1
+    if (x1==x2).all():
+        return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
     else:
-        intermediate = -np.dot(difference.transpose(),difference) * (2 * l ** 2) ** -1
-        if (x1==x2).all():
-            return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
-        else:
-            return (sigma_f ** 2) * exp(intermediate)
+        return (sigma_f ** 2) * exp(intermediate)
 
 #Not squared
 
@@ -68,18 +60,18 @@ def calculate_kk(x1,x2,theta):
         return (sigma_f ** 2) * exp(intermediate)
 
 #Simple case for testing derivative
-def calculate_k(x1,x2,theta,type):
+def calculate_kk(x1,x2,theta,type):
     if type=="normal":
         difference = x1-x2
         #print sigma_n
-        l=exp(theta[0])
-        sigma_f=exp(theta[1])
+        l=exp(5)
+        sigma_f=exp(theta[0])
         sigma_n=0.001
         intermediate = -fabs(difference) * (l **-1)
         if (x1==x2).all():
-            return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
+            return (sigma_f **2) * exp(intermediate) + sigma_n ** 2
         else:
-            return (sigma_f ** 2) * exp(intermediate)
+            return (sigma_f **2) * exp(intermediate)
     elif type=="der_l":
         difference = x1-x2
         #print sigma_n
@@ -87,34 +79,91 @@ def calculate_k(x1,x2,theta,type):
         sigma_f=exp(theta[1])
         sigma_n=0.001
         intermediate = -fabs(difference) * (l **-1)
-        return (sigma_f ** 2) *fabs(difference)*(l)**-2 * exp(intermediate)
+        return (sigma_f **2) *fabs(difference)*(l)**-2 * exp(intermediate)
     elif type=="der_f":
         difference = x1-x2
-        #print sigma_n
-        l=exp(theta[0])
-        sigma_f=exp(theta[1])
+        l=exp(5)
+        sigma_f=exp(theta[0])
         sigma_n=0.001
         intermediate = -fabs(difference) * (l **-1)
-        return 2*sigma_f*exp(intermediate)
+        return 2*sigma_f* exp(intermediate)
 
 
 #As in the paper
-def calculate_kk(x1,x2,theta):
-    difference = x1-x2
-    l1=exp(theta[1])
-    sigma_f1=exp(theta[0])
-    l2=exp(theta[2])
-    sigma_f2=exp(theta[3])
-    sigma_n=exp(theta[4])
-    intermediate1 = -fabs(difference) * (l1 **-1)
-    intermediate2 = -fabs(difference) * (l2 **-1)
+def calculate_k(x1,x2,theta,type):
+    if type=='normal':
+        difference = x1-x2
+        l1=exp(theta[0])
+        sigma_f1=exp(1)
+        l2=exp(theta[1])
+        sigma_f2=exp(1)
+        sigma_n=exp(-30)
+        intermediate1 = -fabs(difference) * (l1 **-1)
+        intermediate2 = -fabs(difference) * (l2 **-1)
 
-    if (x1==x2).all():
-        return (sigma_f1 ** 2) * exp(intermediate1)+ (sigma_f2 ** 2) * exp(intermediate2) + sigma_n ** 2
-    else:
-        return (sigma_f1 ** 2) * exp(intermediate2) + (sigma_f2 ** 2) * exp(intermediate2)
+        if (x1==x2).all():
+            return (sigma_f1 ** 2) * exp(intermediate1)+ (sigma_f2 ** 2) * exp(intermediate2) + sigma_n ** 2
+        else:
+            return (sigma_f1 ** 2) * exp(intermediate1) + (sigma_f2 ** 2) * exp(intermediate2)
+
+    if type=='der_l1':
+        difference = x1-x2
+        l1=exp(theta[0])
+        sigma_f1=exp(1)
+        l2=exp(theta[1])
+        sigma_f2=exp(1)
+        sigma_n=exp(-30)
+        intermediate1 = -fabs(difference) * (l1 **-1)
+        intermediate2 = -fabs(difference) * (l2 **-1)
+        return (sigma_f1 ** 2)*fabs(difference)*(l1)**-2 * exp(intermediate1)
+
+    if type=='der_l2':
+        difference = x1-x2
+        l1=exp(theta[0])
+        sigma_f1=exp(1)
+        l2=exp(theta[1])
+        sigma_f2=exp(1)
+        sigma_n=exp(-30)
+        intermediate1 = -fabs(difference) * (l1 **-1)
+        intermediate2 = -fabs(difference) * (l2 **-1)
+        return (sigma_f2 ** 2)*fabs(difference)*(l2)**-2 * exp(intermediate2)
+
+    if type=='der_f1':
+        difference = x1-x2
+        l1=exp(theta[1])
+        sigma_f1=exp(theta[0])
+        l2=exp(theta[2])
+        sigma_f2=exp(theta[3])
+        sigma_n=exp(theta[4])
+        intermediate1 = -fabs(difference) * (l1 **-1)
+        intermediate2 = -fabs(difference) * (l2 **-1)
+        return 2*sigma_f1*exp(intermediate1)
+
+    if type=='der_f2':
+        difference = x1-x2
+        l1=exp(theta[1])
+        sigma_f1=exp(theta[0])
+        l2=exp(theta[2])
+        sigma_f2=exp(theta[3])
+        sigma_n=exp(theta[4])
+        intermediate1 = -fabs(difference) * (l1 **-1)
+        intermediate2 = -fabs(difference) * (l2 **-1)
+        return 2*sigma_f2*exp(intermediate2)
+
+    if type=='der_n':
+        difference = x1-x2
+        l1=exp(theta[1])
+        sigma_f1=exp(theta[0])
+        l2=exp(theta[2])
+        sigma_f2=exp(theta[3])
+        sigma_n=exp(theta[4])
+        if (x1==x2).all():
+            return 2*sigma_n
+        else:
+            return 0
 
 
+#-----------------------------------------------------------------------------------------------------
 #Evaluates matrix K - covariance matrix
 #Vector format
 def find_K(vector_X, theta,type):
@@ -140,9 +189,9 @@ def find_K_2stars(x,theta,type):
     return calculate_k(x,x,theta,type)
 
 #Function to optimize
-def function_to_minimize_volatility(input_data):
-    vector_x= get_time_vector(get_volatility(90))
-    sample_y_opt = np.array(get_volatility(90))
+def function_to_minimize_volatility(input_data, (end)):
+    vector_x= get_time_vector(get_volatility(end))
+    sample_y_opt = np.array(get_volatility(end))
     sample_y_trans_opt = sample_y_opt.transpose()
     chol=np.linalg.cholesky(find_K(vector_x,input_data,'normal'))
     transient = 2*cholesky_det(chol)
@@ -160,16 +209,13 @@ def cholesky_det(R):
 
 def K_inverse_function(input_data,l):
     vector_x= get_time_vector(get_volatility(l))
-    sample_y_opt = np.array(get_volatility(l))
-    sample_y_trans_opt = sample_y_opt.transpose()
     chol=np.linalg.cholesky(find_K(vector_x,input_data,'normal'))
-    transient = 2*cholesky_det(chol)
     chol_trans = chol.transpose()
     K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
     return K_inverse
 
-def jacobian_of_likelihood(input_data):
-    length=90
+def jacobian_of_likelihood(input_data,end):
+    length=end
     vector_x= get_time_vector(get_volatility(length))
     K_inv = K_inverse_function(input_data,length)
     sample_y_opt = np.array(get_volatility(length))
@@ -177,9 +223,34 @@ def jacobian_of_likelihood(input_data):
     ytKinv=np.dot(sample_y_trans_opt,K_inv)
     Kinvy=np.dot(K_inv,sample_y_opt)
     Kf=find_K(vector_x,input_data,'der_f')
-    Kl=find_K(vector_x,input_data,'der_l')
-    Kf=-0.5*np.dot(ytKinv,np.dot(Kf,Kinvy))+0.5*np.trace(np.dot(K_inv,Kf))
-    Kl=-0.5*np.dot(ytKinv,np.dot(Kl,Kinvy))+0.5*np.trace(np.dot(K_inv,Kl))
-    return np.array([Kl,Kf])
+    #Kl=find_K(vector_x,input_data,'der_l')
+    #Kf=-0.5*np.dot(ytKinv,np.dot(Kf,Kinvy))+0.5*np.trace(np.dot(K_inv,Kf))
+    Kf=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kf,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kf))
+    #Kl=-0.5*np.dot(ytKinv,np.dot(Kl,Kinvy))+0.5*np.trace(np.dot(K_inv,Kl))
+    #Kl=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kl,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kl))
+    result=np.array([Kf])
+    return result.transpose()
+
+def jacobian(input_data,end):
+    vector_x= get_time_vector(get_volatility(end))
+    sample_y_opt = np.array(get_volatility(end))
+    sample_y_trans_opt = sample_y_opt.transpose()
+    K_inv=K_inverse_function(input_data,end)
+    #Kf1=find_K(vector_x,input_data,'der_f1')
+    #Kf2=find_K(vector_x,input_data,'der_f2')
+    Kl1=find_K(vector_x,input_data,'der_l1')
+    Kl2=find_K(vector_x,input_data,'der_l2')
+    #Kn=find_K(vector_x,input_data,'der_n')
+
+    #Kf1=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kf1,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kf1))
+    #Kf2=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kf2,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kf2))
+    Kl1=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kl1,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kl1))
+    Kl2=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kl2,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kl2))
+    #Kn=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kn,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kn))
+
+    #return np.array([Kf1,Kl1,Kl2,Kf2,Kn])
+    return np.array([Kl1,Kl2])
+
+
 
 
