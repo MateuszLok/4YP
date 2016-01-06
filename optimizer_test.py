@@ -5,7 +5,7 @@ import scipy.optimize as optimize
 from pyDOE import lhs
 import numpy as np
 
-def f(input):
+"""def f(input):
     return input[0]* 2 **3 - input[1]* 2*3 **2 - input[2]*2 +5
 
 
@@ -36,6 +36,9 @@ a=np.linalg.inv(a)
 x= (np.dot(a,np.dot(b,a)))
 
 z= np.dot(x,y)
-print np.dot(y_trans,z)
+print np.dot(y_trans,z)"""
+
+intermediate2 = -(5-2) * (2 **-1)
+print intermediate2
 
 

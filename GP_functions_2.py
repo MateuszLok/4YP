@@ -5,6 +5,7 @@ import numpy as np
 from math import log10
 from math import fabs
 import json
+from math import sin
 
 
 #Fetch actual market data from a JSON file
@@ -90,14 +91,14 @@ def calculate_kk(x1,x2,theta,type):
 
 
 #As in the paper
-def calculate_k(x1,x2,theta,type):
+def calculate_kk(x1,x2,theta,type):
     if type=='normal':
         difference = x1-x2
         l1=exp(theta[0])
-        sigma_f1=exp(1)
+        sigma_f1=exp(theta[2])
         l2=exp(theta[1])
-        sigma_f2=exp(1)
-        sigma_n=exp(-30)
+        sigma_f2=exp(theta[3])
+        sigma_n=exp(theta[4])
         intermediate1 = -fabs(difference) * (l1 **-1)
         intermediate2 = -fabs(difference) * (l2 **-1)
 
@@ -109,10 +110,10 @@ def calculate_k(x1,x2,theta,type):
     if type=='der_l1':
         difference = x1-x2
         l1=exp(theta[0])
-        sigma_f1=exp(1)
+        sigma_f1=exp(theta[2])
         l2=exp(theta[1])
-        sigma_f2=exp(1)
-        sigma_n=exp(-30)
+        sigma_f2=exp(theta[3])
+        sigma_n=exp(theta[4])
         intermediate1 = -fabs(difference) * (l1 **-1)
         intermediate2 = -fabs(difference) * (l2 **-1)
         return (sigma_f1 ** 2)*fabs(difference)*(l1)**-2 * exp(intermediate1)
@@ -120,19 +121,19 @@ def calculate_k(x1,x2,theta,type):
     if type=='der_l2':
         difference = x1-x2
         l1=exp(theta[0])
-        sigma_f1=exp(1)
+        sigma_f1=exp(theta[2])
         l2=exp(theta[1])
-        sigma_f2=exp(1)
-        sigma_n=exp(-30)
+        sigma_f2=exp(theta[3])
+        sigma_n=exp(theta[4])
         intermediate1 = -fabs(difference) * (l1 **-1)
         intermediate2 = -fabs(difference) * (l2 **-1)
         return (sigma_f2 ** 2)*fabs(difference)*(l2)**-2 * exp(intermediate2)
 
     if type=='der_f1':
         difference = x1-x2
-        l1=exp(theta[1])
-        sigma_f1=exp(theta[0])
-        l2=exp(theta[2])
+        l1=exp(theta[0])
+        sigma_f1=exp(theta[2])
+        l2=exp(theta[1])
         sigma_f2=exp(theta[3])
         sigma_n=exp(theta[4])
         intermediate1 = -fabs(difference) * (l1 **-1)
@@ -141,9 +142,9 @@ def calculate_k(x1,x2,theta,type):
 
     if type=='der_f2':
         difference = x1-x2
-        l1=exp(theta[1])
-        sigma_f1=exp(theta[0])
-        l2=exp(theta[2])
+        l1=exp(theta[0])
+        sigma_f1=exp(theta[2])
+        l2=exp(theta[1])
         sigma_f2=exp(theta[3])
         sigma_n=exp(theta[4])
         intermediate1 = -fabs(difference) * (l1 **-1)
@@ -152,17 +153,31 @@ def calculate_k(x1,x2,theta,type):
 
     if type=='der_n':
         difference = x1-x2
-        l1=exp(theta[1])
-        sigma_f1=exp(theta[0])
-        l2=exp(theta[2])
+        l1=exp(theta[0])
+        sigma_f1=exp(theta[2])
+        l2=exp(theta[1])
         sigma_f2=exp(theta[3])
         sigma_n=exp(theta[4])
         if (x1==x2).all():
             return 2*sigma_n
         else:
             return 0
+#With periodic term
+def calculate_k(x1,x2,theta,type):
+    if type=='normal':
+        difference = x1-x2
+        l1=exp(theta[0])
+        l2=exp(theta[1])
+        sigma_f1=exp(theta[2])
+        sigma_f2=exp(theta[3])
+        sigma_n=exp(theta[4])
+        intermediate1 = -fabs(difference) * (l1 **-1)
+        intermediate2 = - 2* (sin((difference)*0.5))**2 * (l2 **-1)
 
-
+        if (x1==x2).all():
+            return (sigma_f1 ** 2) * exp(intermediate1)+ (sigma_f2 ** 2) * exp(intermediate2) + sigma_n ** 2
+        else:
+            return (sigma_f1 ** 2) * exp(intermediate1) + (sigma_f2 ** 2) * exp(intermediate2)
 #-----------------------------------------------------------------------------------------------------
 #Evaluates matrix K - covariance matrix
 #Vector format
@@ -236,20 +251,19 @@ def jacobian(input_data,end):
     sample_y_opt = np.array(get_volatility(end))
     sample_y_trans_opt = sample_y_opt.transpose()
     K_inv=K_inverse_function(input_data,end)
-    #Kf1=find_K(vector_x,input_data,'der_f1')
-    #Kf2=find_K(vector_x,input_data,'der_f2')
+    Kf1=find_K(vector_x,input_data,'der_f1')
+    Kf2=find_K(vector_x,input_data,'der_f2')
     Kl1=find_K(vector_x,input_data,'der_l1')
     Kl2=find_K(vector_x,input_data,'der_l2')
-    #Kn=find_K(vector_x,input_data,'der_n')
+    Kn=find_K(vector_x,input_data,'der_n')
 
-    #Kf1=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kf1,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kf1))
-    #Kf2=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kf2,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kf2))
+    Kf1=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kf1,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kf1))
+    Kf2=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kf2,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kf2))
     Kl1=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kl1,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kl1))
     Kl2=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kl2,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kl2))
-    #Kn=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kn,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kn))
+    Kn=-0.5*np.dot(sample_y_trans_opt,np.dot(K_inv,np.dot(Kn,np.dot(K_inv,sample_y_opt))))+0.5*np.trace(np.dot(K_inv,Kn))
 
-    #return np.array([Kf1,Kl1,Kl2,Kf2,Kn])
-    return np.array([Kl1,Kl2])
+    return np.array([Kl1,Kl2,Kf1,Kf2,Kn])
 
 
 

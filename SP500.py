@@ -7,7 +7,7 @@ from math import fabs
 
 # ----------------------------------------------------------------------------
 #Data input
-sample_size = 100
+sample_size = 700
 volatility_observed = gp.get_volatility(sample_size)
 time_vector = gp.get_time_vector(volatility_observed)
 print time_vector
@@ -24,11 +24,11 @@ print volatility_observed
 
 #Latin Hypercube Initlialziation
 print 'Starting...'
-latin_hypercube_values = lhs(2, samples=3)
+latin_hypercube_values = lhs(5, samples=1)
 latin_hypercube_values=latin_hypercube_values*5
 
 #Optimization part
-result=np.zeros((len(latin_hypercube_values),2))
+result=np.zeros((len(latin_hypercube_values),5))
 for number in range(0,len(latin_hypercube_values)):
     print number
     wynik= optimize.minimize(gp.function_to_minimize_volatility, latin_hypercube_values[number], args=(sample_size,), method='BFGS')
@@ -54,7 +54,7 @@ K_inv = np.linalg.inv(K)
 #--------------------------------
 
 #Vector of new x values
-new_values = np.arange(0,500,0.201)
+new_values = np.arange(0,900,0.20001)
 
 #Initialise matrices to store estimated values of y(volatility) and variance
 estimated_values_y = []
@@ -102,7 +102,7 @@ plt.axis([0,len(time_vector)+50,-0.5,0.5])
 
 
 #Error calculation
-forecast_period = 100
+forecast_period = 200
 forecast_volatility = gp.get_volatility(sample_size+forecast_period)
 print len(forecast_volatility)
 
