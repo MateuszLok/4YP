@@ -38,7 +38,13 @@ x= (np.dot(a,np.dot(b,a)))
 z= np.dot(x,y)
 print np.dot(y_trans,z)"""
 
-intermediate2 = -(5-2) * (2 **-1)
-print intermediate2
+list=[0,1,2,3,4,5,6]
+M=list[:3]
+rest=list[3:]
+print M
+print rest
+M=[2,3]
+M=np.vstack(M)
+print M
 
 

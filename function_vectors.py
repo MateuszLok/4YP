@@ -6,7 +6,7 @@ from math import log10
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as optimize
-import GP_functions_2 as gp
+import GP_functions as gp
 from pyDOE import lhs
 from math import fabs
 
@@ -18,7 +18,7 @@ sample_vector = gp.get_x_values_2d()
 sample_y = gp.get_y_values_2d()
 new_x = np.array([0.2])
 print 'Starting...'
-latin_hypercube_values = lhs(3, samples=10)
+latin_hypercube_values = lhs(3, samples=30)
 latin_hypercube_values=latin_hypercube_values
 
 #Optimization part
@@ -34,6 +34,9 @@ for number in range(0,len(latin_hypercube_values)):
 min_index = np.argmin(likelihood)
 #Order of hyperparameters f,l,n
 hyperparameters = result[min_index]
+
+print hyperparameters
+hyperparameters=[2.182689,0.49942996,-1.866944]
 
 
 
@@ -78,18 +81,15 @@ for number in range(0,len(estimated_values_y)):
 
 new_estimated_variance_y = estimated_variance_y
 
-print new_estimated_values_y
 
 new_estimated_variance_y_1 = []
 new_estimated_variance_y_2 = []
-print new_estimated_variance_y
 for number in range(0,len(new_estimated_variance_y)):
     new_estimated_variance_y_1.append(new_estimated_values_y[number]+new_estimated_variance_y[number])
     new_estimated_variance_y_2.append(new_estimated_values_y[number]-new_estimated_variance_y[number])
-print new_estimated_variance_y_1
-print new_estimated_variance_y_2
+
 #Plotting estimated curve
-plt.fill_between(new_values, new_estimated_variance_y_2,new_estimated_variance_y_1,alpha=0.5)
+plt.fill_between(new_values, new_estimated_variance_y_2,new_estimated_variance_y_1,alpha=0.4)
 plt.plot(new_values,new_estimated_values_y, 'b-')
 #pl.fill(np.concatenate([x, x[::-1]]),np.concatenate([y_pred - 1.9600 * sigma,(y_pred + 1.9600 * sigma)[::-1]]),alpha=.5, fc='b', ec='None', label='95% confidence interval')
 #Plotting one new value
@@ -97,5 +97,8 @@ plt.plot(sample_vector, sample_y, 'r.', markersize = 10)
 #plt.axis([min(sample_vector)-0.5, max(sample_vector)+0.5, min(sample_y)-0.5, max(sample_y)+0.5])
 plt.axis([-4,4,-4,4])
 #plt.plot([0.2],[y_star], 'go')
-plt.show()
+plt.ylabel("Observations")
+plt.xlabel("Independent variable")
+plt.title("Length scale (horizontal) too big")
+plt.savefig("hyperparamters_l_big")
 

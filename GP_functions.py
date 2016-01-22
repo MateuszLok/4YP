@@ -32,10 +32,10 @@ def get_time_vector(x):
 
 #Define sample input vectors
 def get_x_values_2d():
-    return np.array(([-1.5],[-1.49],[-1.00],[-0.75],[-0.40],[-0.25],[-0.24],[0.0],[0.1]),dtype=float)
+    return np.array(([-3.6],[-2.2],[-1.5],[-1.49],[-1.00],[-0.75],[-0.40],[-0.25],[-0.24],[0.0],[0.1],[1.0],[1.2],[1.5],[2.1],[2.3],[3.5]),dtype=float)
 
 def get_y_values_2d():
-    return np.array(([-1.7], [-1.69], [-1.25], [-0.35], [0.1], [0.5],[0.51], [0.75],[0.82]),dtype=float)
+    return np.array(([-1.54],[-1.59],[-1.7], [-1.69], [-1.25], [-0.35], [0.1], [0.5],[0.51], [0.75],[0.82],[1.1],[1.2],[1.25],[1.06],[0.92],[0.81]),dtype=float)
 
 
 def get_x_values_3d():
@@ -53,11 +53,11 @@ def get_y_values_4d():
 
 
 #Calculate covariance for two values
-def calculate_kk(x1,x2,sigma_f,sigma_n,l):
+def calculate_k(x1,x2,h):
     difference = x1-x2
-    l=exp(l)
-    sigma_f=exp(sigma_f)
-    sigma_n=exp(sigma_n)
+    l=exp(h[0])
+    sigma_f=exp(h[1])
+    sigma_n=exp(h[2])
 #3D
     if x1.shape == (2,):
         intermediate = -0.5*np.dot(np.dot(difference.transpose(),np.linalg.inv(l)),difference)
@@ -75,7 +75,7 @@ def calculate_kk(x1,x2,sigma_f,sigma_n,l):
             return (sigma_f ** 2) * exp(intermediate)
 
 #Not squared
-def calculate_k(x1,x2,sigma_f,sigma_n,l):
+def calculate_kk(x1,x2,sigma_f,sigma_n,l):
     difference = x1-x2
     #print sigma_n
     l=exp(l)
@@ -91,26 +91,26 @@ def calculate_k(x1,x2,sigma_f,sigma_n,l):
 
 #Evaluates matrix K - covariance matrix
 #Vector format
-def find_K(vector_X, sigma_f, sigma_n, l):
+def find_K(vector_X,h):
     outcome = np.zeros((len(vector_X),len(vector_X)))
     for i in range(0, len(vector_X)):
         for j in range(i,len(vector_X)):
-            temp = (calculate_k(vector_X[i],vector_X[j],sigma_f,sigma_n,l))
+            temp = (calculate_k(vector_X[i],vector_X[j],h))
             outcome[i][j] = temp
             outcome[j][i] = temp
 
     return outcome
 
 #Evaluates matrix K*
-def find_K_star(vector,x,sigma_f,sigma_n,l):
+def find_K_star(vector,x,h):
     outcome = np.zeros((1, len(vector)))
     for i in range(0,len(vector)):
-        outcome[0][i] = calculate_k(x,vector[i],sigma_f, sigma_n,l)
+        outcome[0][i] = calculate_k(x,vector[i],h)
     return outcome
 
 #Evaluates matrix K**
-def find_K_2stars(x,sigma_f,sigma_n,l):
-    return calculate_k(x,x,sigma_f,sigma_n,l)
+def find_K_2stars(x,h):
+    return calculate_k(x,x,h)
 
 #Function to optimize
 def function_to_minimize(input_data):
@@ -129,7 +129,7 @@ def function_to_minimize(input_data):
     vector_x= get_x_values_2d()
     sample_y_opt = np.array(get_y_values_2d())
     sample_y_trans_opt = sample_y_opt.transpose()
-    chol=np.linalg.cholesky(find_K(vector_x,f,n,l))
+    chol=np.linalg.cholesky(find_K(vector_x,input_data))
     transient = 2*cholesky_det(chol)
     chol_trans = chol.transpose()
     K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
@@ -161,7 +161,7 @@ def function_to_minimize_volatility(input_data):
     vector_x= get_time_vector(get_volatility())
     sample_y_opt = np.array(get_volatility())
     sample_y_trans_opt = sample_y_opt.transpose()
-    chol=np.linalg.cholesky(find_K(vector_x,f,n,l))
+    chol=np.linalg.cholesky(find_K(vector_x,input_data))
     transient = 2*cholesky_det(chol)
     chol_trans = chol.transpose()
     K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
