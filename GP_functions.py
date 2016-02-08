@@ -5,6 +5,7 @@ import numpy as np
 from math import log10
 from math import fabs
 import json
+from math import sin
 
 
 #Fetch actual market data from a JSON file
@@ -53,7 +54,7 @@ def get_y_values_4d():
 
 
 #Calculate covariance for two values
-def calculate_k(x1,x2,h):
+def calculate_kk(x1,x2,h):
     difference = x1-x2
     l=exp(h[0])
     sigma_f=exp(h[1])
@@ -86,6 +87,19 @@ def calculate_kk(x1,x2,sigma_f,sigma_n,l):
         return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
     else:
         return (sigma_f ** 2) * exp(intermediate)
+
+#Periodic
+def calculate_k(x1,x2,h):
+    difference = x1-x2
+    l=exp(h[0])
+    sigma_f=exp(h[1])
+    sigma_n=exp(h[2])
+    intermediate2 = - 2* (sin((difference)*0.5))**2 * (l **-2)
+    if (x1==x2).all():
+        return (sigma_f ** 2) * exp(intermediate2) + sigma_n ** 2
+    else:
+        return (sigma_f ** 2) * exp(intermediate2)
+
 
 
 

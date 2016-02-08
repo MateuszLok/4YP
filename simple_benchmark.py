@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 def get_prices():
-    json_data = open('oil_futures.json').read()
+    json_data = open('corn.json').read()
     data = json.loads(json_data)
     days = len(data["dataset"]["data"])
     max_prices = np.zeros((1,days))
@@ -80,7 +80,7 @@ def function_to_optimize(input_data, data_period):
 
 #Start ______________________
 
-period = 3000
+period = 1260
 
 #Latin Hypercube Initlialziation
 print 'Starting...'
@@ -108,7 +108,7 @@ beta=hyperparameters[1]
 log_h_bar=hyperparameters[2]
 
 
-forecast=100
+forecast=252
 
 for index in range(period,period+forecast):
     log_h.append(log_h_bar+rho*(log_h[index-1]-log_h_bar)+beta*(1/252)**0.5)

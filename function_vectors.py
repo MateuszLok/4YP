@@ -18,7 +18,7 @@ sample_vector = gp.get_x_values_2d()
 sample_y = gp.get_y_values_2d()
 new_x = np.array([0.2])
 print 'Starting...'
-latin_hypercube_values = lhs(3, samples=30)
+latin_hypercube_values = lhs(3, samples=20)
 latin_hypercube_values=latin_hypercube_values
 
 #Optimization part
@@ -36,7 +36,6 @@ min_index = np.argmin(likelihood)
 hyperparameters = result[min_index]
 
 print hyperparameters
-hyperparameters=[2.182689,0.49942996,-1.866944]
 
 
 
@@ -58,7 +57,7 @@ y_star_var = K_2stars-np.dot(K_star,np.dot(K_inv,K_star_trans))
 #--------------------------------
 
 #Vector of new x values
-new_values = np.arange(-5,5,0.001)
+new_values = np.arange(-20,20,0.001)
 estimated_values_y = []
 estimated_variance_y = []
 K_2stars_estimate = gp.find_K_2stars(new_values[1],hyperparameters)
@@ -95,10 +94,9 @@ plt.plot(new_values,new_estimated_values_y, 'b-')
 #Plotting one new value
 plt.plot(sample_vector, sample_y, 'r.', markersize = 10)
 #plt.axis([min(sample_vector)-0.5, max(sample_vector)+0.5, min(sample_y)-0.5, max(sample_y)+0.5])
-plt.axis([-4,4,-4,4])
+plt.axis([-20,20,-4,4])
 #plt.plot([0.2],[y_star], 'go')
 plt.ylabel("Observations")
 plt.xlabel("Independent variable")
-plt.title("Length scale (horizontal) too big")
-plt.savefig("hyperparamters_l_big")
+plt.show()
 
