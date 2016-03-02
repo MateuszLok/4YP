@@ -4,6 +4,7 @@ __author__ = 'Mat'
 import scipy.optimize as optimize
 from pyDOE import lhs
 import numpy as np
+import scipy as sp
 
 """def f(input):
     return input[0]* 2 **3 - input[1]* 2*3 **2 - input[2]*2 +5
@@ -36,7 +37,7 @@ a=np.linalg.inv(a)
 x= (np.dot(a,np.dot(b,a)))
 
 z= np.dot(x,y)
-print np.dot(y_trans,z)"""
+print np.dot(y_trans,z)
 
 list=[0,1,2,3,4,5,6]
 M=list[:3]
@@ -45,6 +46,20 @@ print M
 print rest
 M=[2,3]
 M=np.vstack(M)
-print M
+print M"""
+
+a = np.array([[1,1],[1,1]])
+while True:
+    try:
+        print sp.linalg.cholesky(a)
+        break
+    except:
+        print "lol"
+        a_sup=np.array([[0.01,0],[0,0.01]])
+        a=np.add(a,a_sup)
+        print a
+
+
+print "exit"
 
 

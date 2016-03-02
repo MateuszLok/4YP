@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 
 
 
-def get_prices():
-    json_data = open('corn.json').read()
+"""def get_prices():
+    json_data = open('corn2005.json').read()
     data = json.loads(json_data)
     days = len(data["dataset"]["data"])
     max_prices = np.zeros((1,days))
@@ -43,7 +43,7 @@ def get_prices():
 
     return max_prices[0],min_prices[0],price_diff[0]
 
-max_pr, min_pr, pr_diff = get_prices()
+max_pr, min_pr, pr_diff = get_prices()"""
 
 def function_to_optimize(input_data, data_period):
     Dt=gp.get_volatility(data_period)
@@ -53,8 +53,8 @@ def function_to_optimize(input_data, data_period):
     #log_h_bar = sum(Dt)/len(Dt)-c1
     log_h_bar=input_data[2]
 
+
     #log_h_0  at t=0
-    global log_h
     log_h=[]
     log_h.append(Dt[0]-c1)
     cov=[]
@@ -62,11 +62,14 @@ def function_to_optimize(input_data, data_period):
 
     rho=input_data[0]
     beta=input_data[1]
+    cov.append(beta)
 
     for index in range(1,len(Dt)):
-        log_h_estimate=log_h_bar+rho*(log_h[index-1]-log_h_bar)+beta*(1/252)**0.5
+        log_h_estimate=log_h_bar+rho*(log_h[index-1]-log_h_bar)
         #Q=(rho**index*cov[index-1]+beta**2 *1/252*(rho)
-        Q=beta
+        #Q=beta
+
+        Q=rho**2*cov[index-1]+beta**2*1/252
         cov_estimate=cov[index-1]+Q
         log_h.append(log_h_estimate+(cov_estimate/(cov_estimate+c2**2))*(Dt[index]-c1-log_h_estimate))
         cov.append(cov_estimate-cov_estimate**2/(cov_estimate+c2**2))
@@ -75,7 +78,7 @@ def function_to_optimize(input_data, data_period):
 
     error=0
     for index in range(0,len(Dt)):
-        error+=(Dt[index]-log_h[index])**2
+        error+=((Dt[index]-log_h[index])**2)/cov[index]
     return error
 
 #Start ______________________
@@ -107,11 +110,34 @@ rho=hyperparameters[0]
 beta=hyperparameters[1]
 log_h_bar=hyperparameters[2]
 
+Dt=gp.get_volatility(period)
+c1=0.43
+c2=0.29
+log_h=[]
+log_h.append(Dt[0]-c1)
+cov=[]
+cov.append(c2**2)
 
-forecast=252
+cov.append(beta)
+
+for index in range(1,len(Dt)):
+    log_h_estimate=log_h_bar+rho*(log_h[index-1]-log_h_bar)
+    #Q=(rho**index*cov[index-1]+beta**2 *1/252*(rho)
+    #Q=beta
+
+    Q=rho**2*cov[index-1]+beta**2*1/252
+    cov_estimate=cov[index-1]+Q
+    log_h.append(log_h_estimate+(cov_estimate/(cov_estimate+c2**2))*(Dt[index]-c1-log_h_estimate+cov[index-1]*np.random.normal(0,1)))
+    cov.append(cov_estimate-cov_estimate**2/(cov_estimate+c2**2))
+
+Dt =[elem-c1 for elem in Dt]
+
+
+
+forecast=256
 
 for index in range(period,period+forecast):
-    log_h.append(log_h_bar+rho*(log_h[index-1]-log_h_bar)+beta*(1/252)**0.5)
+    log_h.append(log_h_bar+rho*(log_h[index-1]-log_h_bar))
 
 print 'log h' + str(len(log_h))
 
@@ -122,7 +148,7 @@ log_h=[log_h[index]+0.43 for index in range(period,period+forecast)]
 Dt=gp.get_volatility(period+forecast)
 error=0
 for index in range(0,forecast):
-    error+=(log_h[index]-Dt[index+500])**2
+    error+=(log_h[index]-Dt[index+forecast])**2
 
 print error/forecast
 
@@ -130,6 +156,7 @@ Dt=[ele-0.43 for ele in Dt]
 
 plt.plot(gp.get_time_vector(Dt), Dt, 'r.', markersize = 5)
 plt.plot(gp.get_time_vector(h_for_plotting), h_for_plotting, 'g.', markersize=5)
+plt.axis([0,period+forecast,-7,2])
 
 
 
