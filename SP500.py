@@ -8,7 +8,7 @@ from math import log
 
 # ----------------------------------------------------------------------------
 #Data input
-sample_size =5
+sample_size =1260
 jitter=0
 volatility_observed = gp.get_volatility(sample_size)
 time_vector = gp.get_time_vector(volatility_observed)
@@ -25,12 +25,12 @@ print volatility_observed
 
 f1=open('hyperparameters','w')
 
-#Latin Hypercube Initlialziation
+"""#Latin Hypercube Initlialziation
 print 'Starting...'
-latin_hypercube_values = lhs(5, samples=20)
-latin_hypercube_values=latin_hypercube_values*2
+latin_hypercube_values = lhs(5, samples=1)
+latin_hypercube_values=latin_hypercube_values*10
 #Optimization part
-result=np.zeros((len(latin_hypercube_values),5))
+result=np.zeros((len(latin_hypercube_values),4))
 for number in range(0,len(latin_hypercube_values)):
     print number
     wynik= optimize.minimize(gp.function_to_minimize_volatility, latin_hypercube_values[number], args=(sample_size,), method='BFGS')
@@ -46,16 +46,21 @@ min_index = np.argmin(likelihood)
 print likelihood
 print min_index
 print result[min_index]
-hyperparameters = result[min_index]
+hyperparameters = result[min_index]"""
 
-#hyperparameters=[3.85,19.29,-0.907,1.629,-0.68]
-
+#hyperparameters=[3.85032343,19.29309899,-0.9074395,1.62907228,-0.68368862]
+#hyperparameters=[-1.293944,8.73993713,-0.7438694,1.536927,-0.636638]
+#hyperparameters=[ 4.95706937, -2.84268849,  0.73411089, -1.01649983, -1.04456131]
+#hyperparameters=[21.02283188,  12.656023,    0.54348225]
+#hyperparameters = [  4.45066253,  10.61178282,  -0.66725735,   0.49673853]
+#NG05 periodic
+hyperparameters=[   6.85143766,  364.53201194,    0.46546251,    4.09265934,    0.50855517]
 f1.close()
 
 
 #Finding values of K matrices for new values of x
-K = gp.find_K(time_vector,hyperparameters,'normal')
-K_2stars_estimate = gp.find_K_2stars(new_x,hyperparameters,'normal')
+K = gp.find_K(time_vector,hyperparameters,'normal',jitter)
+K_2stars_estimate = gp.find_K_2stars(new_x,hyperparameters,'normal',jitter)
 K_inv = np.linalg.inv(K)
 
 #--------------------------------
@@ -72,7 +77,7 @@ estimated_variance_size = 0
 
 #Find y and variance for all 'new values'
 for number in new_values:
-    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal')
+    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal',jitter)
     X_estimate = np.dot(K_star_estimate,K_inv)
     estimated_values_y.append((np.dot(X_estimate,volatility_observed).tolist()))
     K_star_trans_estimate = K_star_estimate.transpose()
@@ -101,7 +106,7 @@ moving_avg=gp.get_moving_average(sample_size)-average
 #Plotting one new value
 all_volatility=gp.get_volatility('all')-average
 plt.fill_between(new_values, new_estimated_variance_y_2,new_estimated_variance_y_1,alpha=0.4)
-plt.plot(new_values,new_estimated_values_y, 'g-')
+plt.plot(new_values,new_estimated_values_y, 'g-', linewidth=3)
 plt.plot(time_vector, volatility_observed, 'r.', markersize = 5)
 #plt.plot(gp.get_time_vector(monthly),monthly, 'r.', markersize = 5)
 #plt.plot(gp.get_time_vector(moving_avg),moving_avg,'b-',)
@@ -124,7 +129,7 @@ estimated_values_y_forecast = []
 
 #Find y and variance for all 'new values'
 for number in forecast_values:
-    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal')
+    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal',jitter)
     X_estimate = np.dot(K_star_estimate,K_inv)
     estimated_values_y_forecast.append((np.dot(X_estimate,volatility_observed).tolist()))
 
@@ -161,7 +166,7 @@ estimated_variance_y_forecast = []
 
 #Find y and variance for all 'new values'
 for number in forecast_values:
-    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal')
+    K_star_estimate = gp.find_K_star(time_vector,number,hyperparameters,'normal',jitter)
     K_star_trans_estimate = K_star_estimate.transpose()
     temp = (K_2stars_estimate-np.dot(K_star_estimate,np.dot(K_inv,K_star_trans_estimate)))
     #To list to get rid of matrix representation
@@ -183,10 +188,11 @@ sum_nll=[0,0,0,0]
 for index1 in range(len(H_periods)):
     for index in range(sample_size,sample_size+H_periods[index1]):
         sum_nll[index1]+=0.5*(log(2*3.14)+log(fabs(new_estimated_variance_y_forecast[index-sample_size]))+\
-                         (forecast_volatility[index]-new_estimated_values_y_forecast[index-sample_size])**2)*\
-                         new_estimated_variance_y_forecast[index-sample_size]**-1
+                         (forecast_volatility[index]-new_estimated_values_y_forecast[index-sample_size])**2*\
+                         new_estimated_variance_y_forecast[index-sample_size]**-1)
 print sum_nll
 
+plt.savefig("naturalgas2005priors.png", dpi=200)
 plt.show()
 
 f=open('outputs','w')

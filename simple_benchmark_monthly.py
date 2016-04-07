@@ -11,52 +11,12 @@ from math import fabs
 from math import log10
 
 
-
-"""def get_prices():
-    json_data = open('corn2005.json').read()
-    data = json.loads(json_data)
-    days = len(data["dataset"]["data"])
-    max_prices = np.zeros((1,days))
-    min_prices = np.zeros((1,days))
-    price_diff = np.zeros((1,days))
-    for number in range(0,days):
-        max = data["dataset"]["data"][days-number-1][2]
-        min = data["dataset"]["data"][days-number-1][3]
-        opening = data["dataset"]["data"][days-number-1][1]
-        closing = data["dataset"]["data"][days-number-1][4]
-
-        if type(max) != float or type(min)!= float or min ==0  or max==0:
-            max_prices[0][number]=max_prices[0][number-1]
-            min_prices[0][number]=min_prices[0][number-1]
-        else:
-            max_prices[0][number]=max
-            min_prices[0][number]=min
-
-        if type(opening) != float or type(closing)!= float or opening ==0  or closing==0:
-            price_diff[0][number]=price_diff[0][number-1]
-        else:
-            if abs(log(opening)-log(closing))!=0:
-                price_diff[0][number]=log(abs(log(opening)-log(closing)))
-            else:
-                price_diff[0][number]=price_diff[0][number-1]
-
-
-
-
-    return max_prices[0],min_prices[0],price_diff[0]
-
-max_pr, min_pr, pr_diff = get_prices()"""
-
 def function_to_optimize(input_data, data_period):
-    Dt=gp.get_volatility(data_period)
+    Dt=gp.get_monthly_data(data_period,'average')
     c1=0.43
-    c2=0.29
-    #global log_h_bar
-    #log_h_bar = sum(Dt)/len(Dt)-c1
+    c2=0.29/(21**0.5)
+    #c2=0.29
     log_h_bar=input_data[2]
-
-
-    #log_h_0  at t=0
     log_h=[]
     log_h.append(Dt[0]-c1)
     cov=[]
@@ -64,7 +24,6 @@ def function_to_optimize(input_data, data_period):
 
     rho=input_data[0]
     beta=input_data[1]
-    cov.append(0.29)
     error=0
     a=log_h_bar
     b=rho
@@ -73,28 +32,20 @@ def function_to_optimize(input_data, data_period):
     h_e=1
     for index in range(1,len(Dt)):
         log_h_estimate=log_h_bar+rho*(log_h[index-1]-log_h_bar)
-        #Q=(rho**index*cov[index-1]+beta**2 *1/252*(rho)
-        #Q=beta
-
-        Q=rho**2*cov[index-1]+beta**2*1/252
+        Q=rho**2*cov[index-1]+beta**2*1/12
         cov_estimate=cov[index-1]+Q
         log_h.append(log_h_estimate+(cov_estimate/(cov_estimate+c2**2))*(Dt[index]-c1-log_h_estimate))
         cov.append(cov_estimate-cov_estimate**2/(cov_estimate+c2**2))
-        error+=(a+b*log_h[index-1]-b*a-Dt[index]+0.43)**2/(2*0.29**2+2*beta**2*1/252) + log((2*0.29**2+2*beta**2*1/252))*3.14
-    Dt =[elem-c1 for elem in Dt]
-
-    """error=0
-    for index in range(0,len(Dt)):
-        error+=((Dt[index]-log_h[index])**2)/cov[index]"""
+        error+=(a+b*log_h[index-1]-b*a-Dt[index]+0.43)**2/(2*0.29**2+2*beta**2*1/12) + log((2*0.29**2+2*beta**2*1/12))*3.14
     return error
 
 #Start ______________________
 
-period = 1260
+period = 60
 
 #Latin Hypercube Initlialziation
 print 'Starting...'
-latin_hypercube_values = lhs(3, samples=2)
+latin_hypercube_values = lhs(3, samples=10)
 latin_hypercube_values=latin_hypercube_values*2
 
 #Optimization part
@@ -119,9 +70,10 @@ rho=hyperparameters[0]
 beta=hyperparameters[1]
 log_h_bar=hyperparameters[2]
 
-Dt=gp.get_volatility(period)
+Dt=gp.get_monthly_data(60,'average')
 c1=0.43
-c2=0.29
+c2=0.29/(21**0.5)
+#c2=0.29
 log_h=[]
 log_h.append(Dt[0]-c1)
 cov=[]
@@ -144,7 +96,7 @@ for index in range(1,len(Dt)):
         #Q=(rho**index*cov[index-1]+beta**2 *1/252*(rho)
         #Q=beta
 
-        Q=rho**2*cov[index-1]+beta**2*1/252
+        Q=rho**2*cov[index-1]+beta**2*1/12
         cov_estimate=cov[index-1]+Q
         log_h.append(log_h_estimate+(cov_estimate/(cov_estimate+c2**2))*(Dt[index]-c1-log_h_estimate))
         cov.append(cov_estimate-cov_estimate**2/(cov_estimate+c2**2))
@@ -155,12 +107,12 @@ for index in range(1,len(Dt)):
 
 
 
-forecast=256
+forecast=12
 
 for index in range(period,period+forecast):
     log_h.append(log_h_bar+rho*(log_h[index-1]-log_h_bar))
     #cov.append(rho**(2*index-period)*cov[index-1]+beta**2*1/252*(1-rho**(2*index-period))/(1-rho**2))
-    Q=rho**2*cov[index-1]+beta**2*1/252
+    Q=rho**2*cov[index-1]+beta**2*1/12
     cov_estimate=cov[index-1]+Q
     cov.append(cov_estimate)
 
@@ -170,7 +122,7 @@ del cov[0]
 h_for_plotting=log_h
 log_h=[log_h[index]+0.43 for index in range(0,period+forecast)]
 
-Dt=gp.get_volatility(period+forecast)
+Dt=gp.get_monthly_data(period+forecast,'average')
 error=0
 for index in range(period,period+forecast):
     error+=(log_h[index]-Dt[index])**2
@@ -183,32 +135,20 @@ cov_2=[1.96*(fabs(cov[index]))**0.5 for index in range(len(cov))]
 print cov[period:period+10]
 
 
-plt.plot(gp.get_time_vector(Dt), Dt, 'r.', markersize = 5)
-plt.plot(gp.get_time_vector(log_h), log_h, 'g.', markersize=5)
-plt.errorbar(gp.get_time_vector(log_h), log_h,xerr=0, yerr=cov_2, alpha=0.15, capsize=0)
-plt.axis([0,period+forecast,-4.5,-1.5])
-plt.xlabel("Trading Day")
-plt.ylabel("Volatility Approximation")
-plt.title("Forecast using Stochastic Volatility model")
-plt.axvline(x=1260,linewidth=3, color='k')
+plt.plot(gp.get_time_vector(Dt), Dt, 'r.', markersize = 6)
+plt.plot(gp.get_time_vector(log_h), log_h, 'g.', markersize=8)
+plt.errorbar(gp.get_time_vector(log_h), log_h,xerr=0, yerr=cov_2, alpha=0.4, capsize=0, linewidth=1.5, fmt='o')
+plt.axis([0,period+forecast,-5.5,-2.5])
+plt.axvline(x=60,linewidth=2, color='k')
+plt.title('Monthly Volatility Forecast Using Stochastic Volatility Model')
+plt.xlabel("Trading month")
+plt.ylabel("Volatility approximation")
 
-H_periods=[1,5,21,252]
-sum_nll=[0,0,0,0]
-
-for index1 in range(len(H_periods)):
-    for index in range(period,period+H_periods[index1]):
-        print 0.5*(Dt[index]-log_h[index])**2*\
-                         cov[index]**-1
-        sum_nll[index1]+=0.5*(log(2*3.14)+log(fabs(cov[index]))+\
-                         (Dt[index]-log_h[index])**2*\
-                         cov[index]**-1)
-
-print sum_nll
-
-
+H_periods=[1,3,6,12]
 sum_errors=[0,0,0,0]
 for index1 in range(len(H_periods)):
-    for index in range(1260,1260+H_periods[index1]):
+    for index in range(60,60+H_periods[index1]):
+        print Dt[index]-log_h[index]
         sum_errors[index1]+=fabs(Dt[index]-log_h[index])**2
 
 print sum_errors
@@ -219,8 +159,19 @@ for index1 in range(len(H_periods)):
 
 print error
 
+sum_nll=[0,0,0,0]
 
-plt.savefig("NG05daily.png",dpi=200)
+
+for index1 in range(len(H_periods)):
+    for index in range(period,period+H_periods[index1]):
+        sum_nll[index1]+=0.5*(log(2*3.14)+log(fabs(cov[index]))+\
+                         (Dt[index]-log_h[index])**2*\
+                         cov[index]**-1)
+
+print sum_nll
+
+
+#plt.savefig("Soya2005MonthlySV.png", dpi=200)
 plt.show()
 
 

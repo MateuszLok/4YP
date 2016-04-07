@@ -12,7 +12,7 @@ import scipy as sp
 
 #Fetch actual market data from a JSON file
 def get_volatility(x):
-    json_data = open('naturalgas2005.json').read()
+    json_data = open('apple2005.json').read()
     data = json.loads(json_data)
     days = len(data["dataset"]["data"])
     volatility = np.zeros((1,days))
@@ -63,6 +63,20 @@ def calculate_k(x1,x2,theta,type,j):
         else:
             return (sigma_f ** 2)*(1+(3)**(0.5)*fabs(difference)*(l **-2)) * exp(intermediate)
 
+#Matern 5/2
+def calculate_kk(x1,x2,theta,type,j):
+    if type=='normal':
+        difference = x1-x2
+        l=(theta[0])
+        sigma_f=(theta[1])
+        sigma_n=(theta[2])
+        intermediate = -(5)**(0.5)*fabs(difference)*(l **-1)
+        if (x1==x2).all():
+            return (sigma_f ** 2)*(1+(5)**(0.5)*fabs(difference)*(l **-1)+5*(difference)**2/(3*l**2)) * exp(intermediate) + sigma_n ** 2 +j
+        else:
+            return (sigma_f ** 2)*(1+(5)**(0.5)*fabs(difference)*(l **-1)+5*(difference)**2/(3*l**2)) * exp(intermediate)
+
+
 #Not squared
 
 
@@ -70,10 +84,10 @@ def calculate_kk(x1,x2,theta,type,j):
     if type=='normal':
         difference = x1-x2
         #print sigma_n
-        l=exp(theta[0])
-        sigma_f=exp(theta[1])
-        sigma_n=exp(theta[2])
-        intermediate = -fabs(difference) * (l **-1)
+        l=(theta[0])
+        sigma_f=(theta[1])
+        sigma_n=(theta[2])
+        intermediate = -fabs(difference) * (l **-2)
         if (x1==x2).all():
             return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2 + j
         else:
@@ -155,13 +169,14 @@ def calculate_kk(x1,x2,theta,type,jitter):
         sigma_f1=(theta[2])
         sigma_f2=(theta[3])
         sigma_n=(theta[4])
-        intermediate1 = -fabs(difference) * (l1 **-2)
+        intermediate1 = -fabs(difference) * (l1 **-1)
         intermediate2 = - 2* (sin((difference)*0.5))**2 * (l2 **-2)
 
         if (x1==x2).all():
             return (sigma_f1 ** 2) * exp(intermediate1)+ (sigma_f2 ** 2) * exp(intermediate2) + sigma_n ** 2 + jitter
         else:
             return (sigma_f1 ** 2) * exp(intermediate1) + (sigma_f2 ** 2) * exp(intermediate2)
+
 #periodic with squared
 def calculate_kk(x1,x2,theta,type,jitter):
     if type=='normal':
@@ -212,6 +227,23 @@ def calculate_kk(x1,x2,h,type):
             return (sigma_f ** 2) * exp(intermediate) + sigma_n ** 2
         else:
             return (sigma_f ** 2) * exp(intermediate)
+
+#Test for daily with prior
+def calculate_kk(x1,x2,theta,type,jitter):
+    if type=='normal':
+        difference = x1-x2
+        l1=22
+        l2=(theta[0])
+        sigma_f1=(theta[1])
+        sigma_f2=(theta[2])
+        sigma_n=(theta[3])
+        intermediate1 = -(3)**(0.5)*fabs(difference)*(l1 **-2)
+        intermediate2 = - fabs(difference)*(l2**-2)
+
+        if (x1==x2).all():
+            return (sigma_f1 ** 2)*(1+(3)**(0.5)*fabs(difference)*(l1 **-2)) * exp(intermediate1)+ (sigma_f2 ** 2) * exp(intermediate2) + sigma_n ** 2 + jitter
+        else:
+            return (sigma_f1 ** 2)*(1+(3)**(0.5)*fabs(difference)*(l1 **-2)) * exp(intermediate1) + (sigma_f2 ** 2) * exp(intermediate2)
 #-----------------------------------------------------------------------------------------------------
 #Evaluates matrix K - covariance matrix
 #Vector format
@@ -275,7 +307,7 @@ def function_to_minimize_volatility(input_data, (end)):
     sample_y_opt = np.array(get_volatility(end))
     sample_y_trans_opt = sample_y_opt.transpose()
     #print np.linalg.eigvals(find_K(vector_x,input_data,'normal'))
-    chol=sp.linalg.cholesky(find_K(vector_x,input_data,'normal',jitter))
+    #chol=sp.linalg.cholesky(find_K(vector_x,input_data,'normal',jitter))
     while True:
         try:
             chol=sp.linalg.cholesky(find_K(vector_x,input_data,'normal',jitter))
@@ -290,6 +322,7 @@ def function_to_minimize_volatility(input_data, (end)):
     chol_trans = chol.transpose()
     K_inverse = np.dot(np.linalg.inv(chol_trans),np.linalg.inv(chol))
     return (0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28))
+    #return 0.5 * np.dot(sample_y_trans_opt, np.dot(K_inverse, sample_y_opt)) +0.5 * transient + log10(6.28)+ log((3*3.1415+input_data[1])**-1)+(input_data[0]-21.67)**2/(2*input_data[1]**2)
 
 #OLDDDD
 def function_to_minimize_volatilityy(input_data,(end)):

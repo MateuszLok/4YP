@@ -29,7 +29,7 @@ f1=open('hyperparameters','w')
 
 #Latin Hypercube Initlialziation
 print 'Starting...'
-latin_hypercube_values = lhs(3, samples=5)
+latin_hypercube_values = lhs(3, samples=3)
 latin_hypercube_values=latin_hypercube_values*5
 print latin_hypercube_values
 #Optimization part
@@ -109,22 +109,23 @@ print all_monthly_volatility
 all_monthly_volatility=[all_monthly_volatility[index]-average for index in range(len(all_monthly_volatility))]
 
 print all_monthly_volatility
-plt.fill_between(new_values, new_estimated_variance_y_2,new_estimated_variance_y_1,alpha=0.4)
+plt.fill_between(new_values, new_estimated_variance_y_2,new_estimated_variance_y_1,alpha=0.3)
 plt.plot(new_values,new_estimated_values_y, 'g-')
 #plt.plot(time_vector, volatility_observed, 'r.', markersize = 5)
 #plt.plot(gp.get_time_vector(monthly),monthly, 'r.', markersize = 5)
-plt.plot(gp.get_time_vector(all_monthly_volatility),all_monthly_volatility, 'r.', markersize = 5)
+plt.plot(gp.get_time_vector(all_monthly_volatility),all_monthly_volatility, 'r.', markersize = 6)
 #plt.axis([min(sample_vector)-0.5, max(sample_vector)+0.5, min(sample_y)-0.5, max(sample_y)+0.5])
 plt.axis([0,len(time_vector)+12,-2.2,2.2])
 plt.xlabel("Trading month")
 plt.ylabel("Volatility approximation")
 #plt.axis([0,80,-2.2,2.2])
-plt.axvline(x=sample_size,linewidth=3, color='k')
+plt.axvline(x=sample_size,linewidth=2, color='k')
+plt.title('Monthly Volatility forecast using GP with Matern 3/2 covariance function')
 
 
 #Error calculation - RMSE
 forecast_period = 12
-forecast_volatility = gp.get_volatility(sample_size+forecast_period)
+forecast_volatility = gp.get_monthly_data(sample_size+forecast_period,'average')
 
 forecast_values = np.arange(sample_size,sample_size+forecast_period,1)
 
@@ -154,6 +155,7 @@ x=sample_size+forecast_period
 H_periods=[1,3,6,12]
 for index1 in range(len(H_periods)):
     for index in range(sample_size,sample_size+H_periods[index1]):
+        print forecast_volatility[index]
         sum_errors[index1]+=fabs(forecast_volatility[index]-new_estimated_values_y_forecast[index-sample_size])**2
 
 print sum_errors
@@ -181,7 +183,6 @@ new_estimated_variance_y_forecast = []
 for number in range(0,len(estimated_variance_y_forecast)):
     new_estimated_variance_y_forecast.append(estimated_variance_y_forecast[number][0][0])
 
-print new_estimated_variance_y_forecast
 
 print len(new_estimated_variance_y_forecast)
 print len(new_estimated_values_y_forecast)
@@ -195,7 +196,7 @@ for index1 in range(len(H_periods)):
                          (forecast_volatility[index]-new_estimated_values_y_forecast[index-sample_size])**2)*\
                          new_estimated_variance_y_forecast[index-sample_size]**-1
 print sum_nll
-
+#plt.savefig("Soya2005MonthlyGP.png")
 plt.show()
 
 f=open('outputs','w')
